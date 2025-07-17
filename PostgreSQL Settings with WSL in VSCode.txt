@@ -1,0 +1,14 @@
+SOME FUNDAMENTAL COMMANDS for PostgreSQL run from CLI
+
+python -m venv sql_learn								create venv
+source sql_learn/bin/activate							activate venv
+sudo apt update											update system
+sudo apt install postgresql postgresql-contrib			install PostgreSQL
+psql --version											verify installation
+sudo service postgresql start							activate server
+sudo -i -u postgres										enter PostgreSQL with sudo permissions
+	createuser --interactive <user_name>					create new user
+	createdb -O rick <database_name>						create db
+ 	exit													exit from sudo user
+psql -U rick -d universe								enter into database with <user_name> account
+pg_dump -U nome_utente -d nome_database -f nomefile.sql	save the db in .sql format for further use
