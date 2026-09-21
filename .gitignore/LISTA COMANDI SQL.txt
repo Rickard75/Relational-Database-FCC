@@ -1,0 +1,179 @@
+###1 : LEARN BASH COMMANDS by BUILDING A BOILERPLATE
+<command> --help		show info about command
+pwd				show current working directory
+echo <some_text> 		prints on terminal
+echo <some_text> >> <file_name>	prints text on a specific file
+ls				list all folder content
+ls -l					"	with long format
+ls --all				"	considering also files starting with .
+cd <dir_path>			change to another directory
+more <file_name.c>		show file content
+clear				clear terminal
+mkdir <folder_name>		make a new directory		
+touch <file_name.html>		create a new file
+cp <file_name> <folder>		copy a file into an existing folder
+mv <file_name> <new_file_name>	rename a file
+mv <file_name> <folder>		move a file into an existing folder
+find				show the tree of current folder with global paths
+find <folder_name>		show the tree of selected folder
+find -name <file_name>		perform a search for that name in the current path
+
+###2 : BUILD A DATABASE of VIDEOGAMES CHARACTERS (using PostgreSQL)
+
+After the installation of PostgreSQL one needs to log in using: psql --username=freecodecamp --dbname=postgres
+Or sth similar to this command
+
+\l								list all available databases
+CREATE DATABASE <db_name>					create a new database (db)
+\c <db_name>							connect to a db
+\d								display tables' details
+CREATE TABLE my_table();					create a table
+CREATE TABLE my_table(column_name DATATYPE CONSTRAINTS);	create table with column (single command)
+
+\d my_table			show table details
+
+-------------------------------------All PostgreSQL commands must finish with semicolumn ";"-------------------------------------------------
+
+ALTER TABLE <table_name> ADD COLUMN <col_name> <data_type>;						add column to existing table
+ALTER TABLE <table_name> DROP COLUMN <col_name>;							remove column
+ALTER TABLE <table_name> RENAME COLUMN <column_name> TO <new_name>;					rename column
+INSERT INTO <table_name(<column_1>, <column_2>)> VALUES(<value1>, <value2>);				insert datarow
+	e.g. INSERT INTO characters(character_id, name, homeland, favorite_color) VALUES(1, 'Mario', 'Mushroom Kingdom', 'Red');		
+SELECT <columns or * for all> FROM <table_name>;							view columns (all data)
+DELETE FROM <table_name> WHERE <condition>;								remove specific rowdata matching condition
+DROP TABLE <table_name>;										remove table
+ALTER DATABASE <database_name> RENAME TO <new_database_name>;						rename database (must be done externally)
+UPDATE characters SET favorite_color='Orange' WHERE name='Daisy';					change value of a rowdata item
+SELECT * FROM characters ORDER BY character_id;								order rowdata upon column item
+ALTER TABLE characters ADD PRIMARY KEY(name);								set primary key (most important column)
+ALTER TABLE characters DROP CONSTRAINT characters_pkey;							remove primary key
+-----------------------------When a primary key is set, a new table of type "sequence" is created-------------------------------------------
+-----------------------------One DB has more tables which can be linked together with foreign keys------------------------------------------
+
+ALTER TABLE more_info ADD COLUMN character_id INT REFERENCES characters(character_id);			create double column with linking role
+
+-----------------------------Example of an existing table with both primary and foreign keys------------------------------------------------
+mario_database=>                                         Table "public.more_info"
++--------------+--------------+-----------+----------+-------------------------------------------------+
+|    Column    |     Type     | Collation | Nullable |                     Default                     |
++--------------+--------------+-----------+----------+-------------------------------------------------+
+| more_info_id | integer      |           | not null | nextval('more_info_more_info_id_seq'::regclass) |
+| birthday     | date         |           |          |                                                 |
+| height       | integer      |           |          |                                                 |
+| weight       | numeric(4,1) |           |          |                                                 |
+| character_id | integer      |           |          |                                                 |
++--------------+--------------+-----------+----------+-------------------------------------------------+
+Indexes:
+    "more_info_pkey" PRIMARY KEY, btree (more_info_id)
+Foreign-key constraints:
+    "more_info_character_id_fkey" FOREIGN KEY (character_id) REFERENCES characters(character_id)
+----------------------------------------------------------------------------------------------------------------------------------------------
+ALTER TABLE more_info ADD UNIQUE(character_id);								reinforce 1v1 relation for the foreign key
+ALTER TABLE more_info ALTER COLUMN character_id SET NOT NULL;						reinforce non-nulless of the key
+SELECT character_id, name FROM characters WHERE name='Daisy';						find specific column data for single item
+
+-----------------------------------------The new table 'sounds' has a relation 1vMANY: one character, multiple sounds--------------------------
+ALTER TABLE sounds ADD COLUMN character_id INT NOT NULL REFERENCES characters(character_id);		create 1vMANY relation
+
++----------+--------------+--------------+
+| sound_id |   filename   | character_id |
++----------+--------------+--------------+
+|        1 | its-a-me.wav |            1 |
+|        2 | yippee.wav   |            1 |
+|        3 | ha-ha.wav    |            2 |
+|        4 | oh-yeah.wav  |            2 |
+|        5 | yay.wav      |            3 |
+|        6 | woo-hoo.wav  |            3 |
+|        7 | mm-hmm.wav   |            3 |
+|        8 | yahoo.wav    |            1 |
++----------+--------------+--------------+
+
+----------"Many-to-many" relationships usually use a junction table to link two tables together, forming two "one-to-many" relationships.---------
+----------Your junction table will use the primary keys from the <table_1> and <table_2> as foreign keys to create the relationship.--------------
+ALTER TABLE character_actions ADD FOREIGN KEY(character_id) REFERENCES characters(character_id);	create foreign key 
+ALTER TABLE character_actions ADD FOREIGN KEY(action_id) REFERENCES actions(action_id);			create foreign key
+ALTER TABLE star ADD CONSTRAINT fk_star FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id);		create foreign key with personal nickname
+ALTER TABLE <table_name> ADD PRIMARY KEY(<column1>, <column2>);						add composite primary key
+
+mario_database=> \d
+                        List of relations
++--------+-----------------------------+----------+--------------+
+| Schema |            Name             |   Type   |    Owner     |
++--------+-----------------------------+----------+--------------+
+| public | actions                     | table    | freecodecamp |
+| public | actions_action_id_seq       | sequence | freecodecamp |
+| public | character_actions           | table    | freecodecamp |
+| public | characters                  | table    | freecodecamp |
+| public | characters_character_id_seq | sequence | freecodecamp |
+| public | more_info                   | table    | freecodecamp |
+| public | more_info_more_info_id_seq  | sequence | freecodecamp |
+| public | sounds                      | table    | freecodecamp |
+| public | sounds_sound_id_seq         | sequence | freecodecamp |
++--------+-----------------------------+----------+--------------+
+		
+
+SELECT * FROM characters FULL JOIN more_info ON characters.character_id = more_info.character_id;	fa il merge di due tabella sulla base di una colonna che è primary key nella prima (qui characters) e foreign key nella seconda tabella (qui more_info)	
+
+This produces the following output:
+mario_database=>                                                                    
++--------------+--------+------------------+----------------+--------------+------------+--------------+--------------+--------------+
+| character_id |  name  |     homeland     | favorite_color | more_info_id |  birthday  | height_in_cm | weight_in_kg | character_id |
++--------------+--------+------------------+----------------+--------------+------------+--------------+--------------+--------------+
+|            1 | Mario  | Mushroom Kingdom | Red            |            1 | 1981-07-09 |          155 |         64.5 |            1 |
+|            2 | Luigi  | Mushroom Kingdom | Green          |            2 | 1983-07-14 |          175 |         48.8 |            2 |
+|            3 | Peach  | Mushroom Kingdom | Pink           |            3 | 1985-10-18 |          173 |         52.2 |            3 |
+|            4 | Toad   | Mushroom Kingdom | Blue           |            4 | 1950-01-10 |           66 |         35.6 |            4 |
+|            5 | Bowser | Koopa Kingdom    | Yellow         |            5 | 1990-10-29 |          258 |        300.0 |            5 |
+|            6 | Daisy  | Sarasaland       | Orange         |            6 | 1989-07-31 |              |              |            6 |
+|            7 | Yoshi  | Dinosaur Land    | Green          |            7 | 1990-04-13 |          162 |         59.1 |            7 |
++--------------+--------+------------------+----------------+--------------+------------+--------------+--------------+--------------+
+
+Merge is possible between each couple of tables:
+
+mario_database=> SELECT * FROM characters FULL JOIN sounds ON characters.character_id = sounds.character_id;  
++--------------+--------+------------------+----------------+----------+--------------+--------------+
+| character_id |  name  |     homeland     | favorite_color | sound_id |   filename   | character_id |
++--------------+--------+------------------+----------------+----------+--------------+--------------+
+|            1 | Mario  | Mushroom Kingdom | Red            |        1 | its-a-me.wav |            1 |
+|            1 | Mario  | Mushroom Kingdom | Red            |        2 | yippee.wav   |            1 |
+|            2 | Luigi  | Mushroom Kingdom | Green          |        3 | ha-ha.wav    |            2 |
+|            2 | Luigi  | Mushroom Kingdom | Green          |        4 | oh-yeah.wav  |            2 |
+|            3 | Peach  | Mushroom Kingdom | Pink           |        5 | yay.wav      |            3 |
+|            3 | Peach  | Mushroom Kingdom | Pink           |        6 | woo-hoo.wav  |            3 |
+|            3 | Peach  | Mushroom Kingdom | Pink           |        7 | mm-hmm.wav   |            3 |
+|            1 | Mario  | Mushroom Kingdom | Red            |        8 | yahoo.wav    |            1 |
+|            5 | Bowser | Koopa Kingdom    | Yellow         |          |              |              |
+|            6 | Daisy  | Sarasaland       | Orange         |          |              |              |
+|            4 | Toad   | Mushroom Kingdom | Blue           |          |              |              |
+|            7 | Yoshi  | Dinosaur Land    | Green          |          |              |              |
++--------------+--------+------------------+----------------+----------+--------------+--------------+
+
+Merge is possible also with three tables:
+mario_database=> SELECT * FROM character_actions FULL JOIN characters ON character_actions.character_id = characters.character_id FULL JOIN actions ON character
+_actions.character_id = actions.action_id;
+mario_database=>                                                        
++--------------+-----------+--------------+--------+------------------+----------------+-----------+--------+
+| character_id | action_id | character_id |  name  |     homeland     | favorite_color | action_id | action |
++--------------+-----------+--------------+--------+------------------+----------------+-----------+--------+
+|            7 |         1 |            7 | Yoshi  | Dinosaur Land    | Green          |           |        |
+|            7 |         2 |            7 | Yoshi  | Dinosaur Land    | Green          |           |        |
+|            7 |         3 |            7 | Yoshi  | Dinosaur Land    | Green          |           |        |
+|            6 |         1 |            6 | Daisy  | Sarasaland       | Orange         |           |        |
+|            6 |         2 |            6 | Daisy  | Sarasaland       | Orange         |           |        |
+|            6 |         3 |            6 | Daisy  | Sarasaland       | Orange         |           |        |
+|            5 |         1 |            5 | Bowser | Koopa Kingdom    | Yellow         |           |        |
+|            5 |         2 |            5 | Bowser | Koopa Kingdom    | Yellow         |           |        |
+|            5 |         3 |            5 | Bowser | Koopa Kingdom    | Yellow         |           |        |
+|            4 |         1 |            4 | Toad   | Mushroom Kingdom | Blue           |           |        |
+|            4 |         2 |            4 | Toad   | Mushroom Kingdom | Blue           |           |        |
+|            4 |         3 |            4 | Toad   | Mushroom Kingdom | Blue           |           |        |
+|            3 |         1 |            3 | Peach  | Mushroom Kingdom | Pink           |         3 | duck   |
+|            3 |         2 |            3 | Peach  | Mushroom Kingdom | Pink           |         3 | duck   |
+|            3 |         3 |            3 | Peach  | Mushroom Kingdom | Pink           |         3 | duck   |
+|            2 |         1 |            2 | Luigi  | Mushroom Kingdom | Green          |         2 | jump   |
+|            2 |         2 |            2 | Luigi  | Mushroom Kingdom | Green          |         2 | jump   |
+|            2 |         3 |            2 | Luigi  | Mushroom Kingdom | Green          |         2 | jump   |
+|            1 |         1 |            1 | Mario  | Mushroom Kingdom | Red            |         1 | run    |
+|            1 |         2 |            1 | Mario  | Mushroom Kingdom | Red            |         1 | run    |
+|            1 |         3 |            1 | Mario  | Mushroom Kingdom | Red            |         1 | run    |
++--------------+-----------+--------------+--------+------------------+----------------+-----------+--------+
